@@ -1,0 +1,32 @@
+# Created by Studio AI
+
+# Gradle
+.gradle/
+build/
+local.properties
+
+# IDE files
+.idea/
+*.iml
+*.hprof
+
+# APKs
+*.apk
+*.aab
+
+# Keystore
+*.jks
+*.keystore
+
+# Google services
+google-services.json
+
+# Proguard
+proguard/
+*.map
+
+# Captures
+captures/
+
+# Mac
+.DS_Store
