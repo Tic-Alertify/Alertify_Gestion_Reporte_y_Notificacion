@@ -1,16 +1,57 @@
-version: '3.8'
 services:
-  # SQL Server: Almacenará los datos geoespaciales (GEOGRAPHY) [cite: 393, 452]
+  # SQL Server: Almacenará los datos geoespaciales (GEOGRAPHY)
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: alertify-sqlserver
     ports:
       - "1433:1433"
     environment:
-      - ACCEPT_EULA=Y
-      - MSSQL_SA_PASSWORD=Alertify_Pass2026!
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: "SqlServer@2026"
+      MSSQL_AGENT_ENABLED: "true"
+      MSSQL_PID: "Developer"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    networks:
+      - alertify-network
 
-  # Redis: Funcionará como el Bus de Eventos para el procesamiento asíncrono [cite: 611, 618]
+  # Redis: Funcionará como el Bus de Eventos para el procesamiento asíncrono
   redis:
     image: redis:7-alpine
+    container_name: alertify-redis
     ports:
       - "6379:6379"
+    networks:
+      - alertify-network
+
+  # Backend NestJS
+  backend:
+    build: .
+    container_name: alertify-backend
+    ports:
+      - "3000:3000"
+    environment:
+      DB_HOST: sqlserver
+      DB_PORT: 1433
+      DB_USERNAME: sa
+      DB_PASSWORD: SqlServer@2026
+      DB_DATABASE: AlertifyDB
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      NODE_ENV: development
+    depends_on:
+      - sqlserver
+      - redis
+    volumes:
+      - .:/app:cached
+      - /app/node_modules
+    restart: on-failure
+    networks:
+      - alertify-network
+
+volumes:
+  sqlserver_data:
+
+networks:
+  alertify-network:
+    driver: bridge

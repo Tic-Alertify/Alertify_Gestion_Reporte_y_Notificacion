@@ -1,56 +1,138 @@
-# compiled output
-/dist
-/node_modules
-/build
+# =============================================================================
+# Alertify Backend (.gitignore) - NestJS / Node / Docker / Environment
+# =============================================================================
 
-# Logs
-logs
+# CRITICAL: Never commit environment variables with secrets
+# All .env files are ignored except .env.example (if you want to share template)
+.env
+.env.local
+.env.*.local
+.env.production
+.env.development
+.env.test
+.env.*.production
+.env.*.development
+
+# Node.js Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+npm-shrinkwrap.json
+
+# Build Outputs
+dist/
+build/
+*.tsbuildinfo
+.nest-cli.json.build
+
+# Compiled JavaScript (keep .js files in .gitignore for TS projects)
+*.js
+*.js.map
+!jest.config.js
+!eslint.config.mjs
+!nest-cli.json
+!nestjs-cli-config.js
+
+# Code Coverage & Testing
+coverage/
+.nyc_output/
+junit.xml
+test-results/
+*.lcov
+
+# Logs & Debugging
+logs/
+log/
 *.log
 npm-debug.log*
 pnpm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
+debug/
+.debug/
 
-# OS
+# Operating System
 .DS_Store
+Thumbs.db
+._*
+.AppleDouble
+.LSOverride
 
-# Tests
-/coverage
-/.nyc_output
-
-# IDEs and editors
-/.idea
-.project
-.classpath
-.c9/
-*.launch
-.settings/
-*.sublime-workspace
-
-# IDE - VSCode
+# IDE & Editor Configuration
 .vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
+.idea/
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-project
+*.sublime-workspace
+.netbeans/
 
-# dotenv environment variable files
-.env
-.env.development.local
-.env.test.local
-.env.production.local
-.env.local
+# Database & Cache Files
+*.db
+*.sqlite
+*.sqlite3
+dump.rdb
+.cache/
+.eslintcache
 
-# temp directory
-.temp
-.tmp
-
-# Runtime data
-pids
+# Temporary & Cache Directories
+tmp/
+temp/
+.temp/
+.tmp/
+pids/
 *.pid
 *.seed
 *.pid.lock
 
-# Diagnostic reports (https://nodejs.org/api/report.html)
+# Docker & Containerization
+.dockerignore
+docker-compose.override.yml
+
+# Backup & Temporary Files
+*.bak
+*.backup
+*~
+*.swp
+*.swo
+
+# Security: Private Keys & Certificates
+*.pem
+*.key
+*.pfx
+*.p12
+*.cert
+*.crt
+*.csr
+
+# Diagnostic Reports
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# Generated & Auto-generated
+generated/
+auto-generated/
+.generated/
+
+# IDE Cache
+.vscode-settings.json
+.prettierrc.local
+
+# OS Lock Files
+.DS_Store
+Thumbs.db
+
+# Misc
+.cargo
+.rustup
+out/
+
+

@@ -5,6 +5,7 @@ import { InjectQueue } from '@nestjs/bullmq';
 import type { Queue } from 'bullmq';
 import { Report } from './entities/report.entity';
 import { CreateReportDto } from './dto/create-report.dto';
+import { HeatmapDataService } from './etl/services/heatmap-data.service';
 
 @Injectable()
 export class ReportsService {
@@ -15,6 +16,9 @@ export class ReportsService {
     // Inyectamos la cola de Redis para validación asíncrona (T17)
     @InjectQueue('report-validation') 
     private readonly reportQueue: Queue,
+
+    // Inyectamos el servicio de heatmap
+    private readonly heatmapDataService: HeatmapDataService,
   ) {}
 
   
@@ -31,43 +35,130 @@ export class ReportsService {
       throw new BadRequestException('El incidente se encuentra fuera de la zona de cobertura (Quito).');
     }
 
-    // 2. Transformar a formato WKT para SQL Server
-    const pointWkt = `POINT(${dto.longitude} ${dto.latitude})`;
-
-    // 3. Crear la entidad
+    // 2. Crear la entidad con coordenadas (el transformer las convierte a WKT)
     const newReport = this.reportRepository.create({
       IdUsuario: dto.userId,
       IdTipoIncidente: dto.incidentTypeId,
-      UbicacionGeografica: pointWkt,
+      UbicacionGeografica: {
+        latitude: dto.latitude,
+        longitude: dto.longitude,
+      },
       Descripcion: dto.description,
       Estado: 0, // Inicia como "Pendiente"
       PuntajeConfianza: 0.0,
     });
 
-    // 4. Persistir en SQL Server
+    // 3. Persistir en SQL Server
     const savedReport = await this.reportRepository.save(newReport);
 
-    // 5. Publicar en el Bus de Eventos (T17)
+    // 4. Publicar en el Bus de Eventos (T17)
     await this.reportQueue.add('validate-report', {
       reportId: savedReport.IdReporte,
-      location: pointWkt
+      location: {
+        latitude: dto.latitude,
+        longitude: dto.longitude,
+      }
     });
 
     return savedReport;
   }
 
   async getValidatedReports() {
-  return await this.reportRepository
-    .createQueryBuilder('report')
-    .select([
-      'report.IdReporte as id',
-      'report.Descripcion as description',
-      'report.UbicacionGeografica.Lat as latitude',
-      'report.UbicacionGeografica.Long as longitude'
-    ])
-    .where('report.Estado = :estado', { estado: 1 })
-    .getRawMany(); 
+    const reports = await this.reportRepository
+      .createQueryBuilder('report')
+      .leftJoinAndSelect('report.tipoIncidente', 'type')
+      .where('report.Estado = :estado', { estado: 1 })
+      .getMany();
+
+      return reports.map(r => ({
+      id: r.IdReporte,
+      description: r.Descripcion,
+      incidentType: r.tipoIncidente?.Nombre || 'Incidente',
+      trustScore: r.PuntajeConfianza,
+      estado: r.Estado, // 
+      latitude: r.UbicacionGeografica?.latitude ?? 0,
+      longitude: r.UbicacionGeografica?.longitude ?? 0,
+      createdAt: r.FechaHoraRegistro,
+    }));
   }
 
-  
+  async getUserReports(userId: number) {
+    const reports = await this.reportRepository
+      .createQueryBuilder('report')
+      .leftJoinAndSelect('report.tipoIncidente', 'type')
+      .where('report.IdUsuario = :userId', { userId })
+      .orderBy('report.FechaHoraRegistro', 'DESC')
+      .getMany();
+
+    return reports.map(r => ({
+      id: r.IdReporte,
+      description: r.Descripcion,
+      incidentType: r.tipoIncidente?.Nombre || 'Incidente',
+      trustScore: r.PuntajeConfianza,
+      estado: r.Estado,
+      latitude: r.UbicacionGeografica?.latitude ?? 0,
+      longitude: r.UbicacionGeografica?.longitude ?? 0,
+      createdAt: r.FechaHoraRegistro
+    }));
+  }
+
+  /**
+   * Obtiene datos de heatmap con intensidad basada en cantidad de reportes
+   */
+  async getHeatmapDataWithIntensity(daysBack: number = 30) {
+    const aggregated = await this.heatmapDataService.getAggregatedHeatmapPoints(
+      daysBack,
+    );
+
+    return {
+      points: aggregated,
+      totalLocations: aggregated.length,
+      totalReports: aggregated.reduce(
+        (sum, point) => sum + point.reportCount,
+        0,
+      ),
+      generatedAt: new Date(),
+    };
+  }
+
+  /**
+   * Obtiene puntos de heatmap individuales
+   */
+  async getHeatmapPoints(daysBack: number = 30) {
+    const points = await this.heatmapDataService.getHeatmapPoints(daysBack);
+    return {
+      points,
+      totalPoints: points.length,
+      generatedAt: new Date(),
+    };
+  }
+
+  /**
+   * Obtiene estadísticas diarias de reportes
+   */
+  async getDailyStats(daysBack: number = 30) {
+    const stats = await this.heatmapDataService.getDailyStats(daysBack);
+    return {
+      stats,
+      period: { daysBack, from: new Date(Date.now() - daysBack * 86400000) },
+      generatedAt: new Date(),
+    };
+  }
+
+  /**
+   * Obtiene clusters de reportes agrupados
+   */
+  async getHeatmapClusters(radiusKm: number = 0.5, daysBack: number = 30) {
+    const clusters = await this.heatmapDataService.getHeatmapClusters(
+      radiusKm,
+      daysBack,
+    );
+    return {
+      clusters,
+      radiusKm,
+      totalClusters: clusters.length,
+      generatedAt: new Date(),
+    };
+  }
+
 }
