@@ -1,0 +1,198 @@
+# =============================================================================
+# Alertify Frontend (.gitignore) - Android Studio / Gradle / Kotlin
+# =============================================================================
+
+# Android Studio Build System & Gradle
+.gradle/
+build/
+local.properties
+gradle-app.setting
+!gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.jar
+*.gradletasknamecache
+
+# Built APK, AAB, Bundle
+*.apk
+*.ap_
+*.aab
+*.abe
+*.bundle
+*.split.apk
+
+# Signing artifacts
+*.jks
+*.keystore
+*.pfx
+*.p12
+*.pem
+*.key
+signing.properties
+*.keystore.properties
+
+# IDE - Android Studio
+.idea/
+.ideaDataSources.xml
+*.iml
+*.iws
+*.ipr
+out/
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-project
+*.sublime-workspace
+.externalNativeBuild
+.cxx
+
+# IDE - IntelliJ
+*.class
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+.idea_modules/
+
+# IDE - VS Code (optional, if used)
+.vscode/
+*.code-workspace
+
+# Local Android project properties
+local.properties
+gradle.properties
+
+# Google Play Services & Firebase
+google-services.json
+firebase-config.json
+
+# Generated files by Android Studio/Gradle
+src/main/java/com/alertify/app/databinding/*.java
+app/build/generated/
+src/main/java/androidx/**
+
+# Proguard & Optimization
+proguard/
+*.map
+proguard-cache/
+mapping.txt
+seeds.txt
+usage.txt
+dump.txt
+
+# Android captures
+captures/
+screenshots/
+screenrecordings/
+
+# Android profiler
+profiler.output/
+
+# Lint reports
+lint-report.html
+lint-report.xml
+lint-results*.html
+lint-results*.xml
+
+# Unit Test / Coverage Reports
+coverage/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+junit.xml
+test-results/
+
+# Mac OS X
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+.cache
+.dbus
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.swp
+*~
+.DS_Store
+
+# Backup and crash report files
+*.bak
+crash-log.txt
+crash-report.txt
+*.jtrace
+
+# Kotlin
+.kotlin
+kotlin-build/
+out
+*.kt.bak
+
+# Git
+.gitk
+
+# Emulator specific
+.emulator_console_auth_token
+qemu.log
+qemu.log.old
+emulator.ini
+
+# Gradle Wrapper
+gradle/wrapper/
+
+# Generated manifest files
+build/intermediates/manifests/
+
+# Data Binding
+src/main/java/com/alertify/app/**/*Binding.java
+src/main/java/com/alertify/app/**/Generated*.java
+app/build/generated/
+
+# ExoPlayer
+.exo-internal
+
+# Misc
+.cargo
+.rustup
+fcm-key.json
+secrets.gradle
+api-keys.properties
+
+# Device Specific
+local-ndk-path.properties
+
+# Test Reports
+androidTest-results/
+test-reports/
+
+# IDE Cache
+.vscode-settings.json
+.prettierrc.local
+
+# NDK
+ndkBuild/
+
+# Compose Compiler Metrics
+compose-metrics/
+composition-reports/
+
+
