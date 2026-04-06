@@ -2,9 +2,17 @@
 
 El modulo de Gestión de Reporte y Notificación permite a ciudadanos que estas dentro DMQ reportar incidentes en tiempo real (delitos, sospechas de incidentes a robos) con un sistema inteligente de validación basado en reputación, densidad histórica y clústeres en vivo. Los reportes validados se distribuyen mediante notificaciones push a través de Firebase.
 
+-
+### **🚀 Funcionalidad Verificada**
+- ✅ API REST intacta (9 endpoints)
+- ✅ WebSocket Gateway activo
+- ✅ Validación asíncrona funcionando
+- ✅ ORM entities correctas
+- ✅ Módulos sin referencias rotas
+
 ---
 
-## 📋 Tabla de Contenidos
+## �📋 Tabla de Contenidos
 
 - [Descripción General](#descripción-general)
 - [Tecnologías Utilizadas](#tecnologías-utilizadas)
@@ -70,21 +78,44 @@ Aplicación Android nativa en **Kotlin** que permite:
 ## ✅ Requisitos Previos
 
 ### **Para el Backend:**
-- **Docker Desktop** (con Docker Compose)
+- **Docker Desktop** (con Docker Compose) - Containeriza SQL Server 2022 + Redis 7
 - **Node.js 18+** y **npm 9+**
-- **TypeScript 5+**
+- **TypeScript 5.7+**
 - **Git**
 
+**Verificar instalación:**
+```bash
+node --version        # v18.x
+npm --version         # 9.x
+docker --version      # 20.x+
+```
+
 ### **Para el Frontend:**
-- **Android Studio (Flamingo o superior)**
+- **Android Studio 2024.1+** (Jellyfish o superior)
 - **Java JDK 11+**
 - **Gradle 8.13+**
-- **Dispositivo Android 7.0+ (API 24+)** o emulador
+- **Dispositivo Android 7.0+ (API 24+)** o emulador con 2GB+ RAM
 
-### **Hardware recomendado:**
-- RAM: 8 GB (mínimo)
-- Espacio en disco: 20 GB
-- CPU multi-núcleo
+**Verificar instalación:**
+```bash
+java -version         # JDK 11+
+./gradlew --version   # Gradle 8.13+
+```
+
+### **Hardware Recomendado:**
+- **RAM**: 8 GB mínimo (12 GB ideal)
+- **SSD**: 25 GB libres
+- **CPU**: Quad-core o superior
+- **GPU**: Aceleración de emulador (Intel HAXM / AMD-V)
+
+### **Servicios Infraestructura:**
+| Servicio | Puerto | Estado |
+|----------|--------|--------|
+| SQL Server 2022 | 1433 | ✅ Docker Compose |
+| Redis 7 | 6379 | ✅ Docker Compose |
+| Backend API | 3000 | ✅ NestJS |
+| Bull Board (colas) | 3000/admin/queues | ✅ Activo |
+| Firebase | - | 🔜 Próxima fase |
 
 ---
 
@@ -574,6 +605,44 @@ programa/
 
 ---
 
+## 🎯 Estado de Implementación
+
+### **✅ Completamente Implementado**
+
+| Feature | Backend | Frontend | Status |
+|---------|---------|----------|--------|
+| **Ingesta de Reportes** | ✅ POST /reports | ✅ GPS + Formulario | 🟢 PROD |
+| **Validación Asíncrona** | ✅ BullMQ Queue | - Visualización | 🟢 PROD |
+| **Algoritmo de Confianza** | ✅ 3-factor score (R+H+C) | - | 🟢 PROD |
+| **Consultas Espaciales** | ✅ STDistance, STBuffer | ✅ Google Maps | 🟢 PROD |
+| **Gestión de Usuarios** | ✅ IdentityModule | ❌ Login | 🟡 PARCIAL |
+| **WebSocket Real-time** | ✅ ReportsGateway | ❌ Listener | 🟡 PARCIAL |
+| **Heatmap de Reportes** | ✅ GET /heatmap/* endpoints | ✅ Mapa interactivo | 🟢 PROD |
+| **Monitoreo de Colas** | ✅ Bull Board | - | 🟢 PROD |
+| **OAuth/JWT** | ❌ No implementado | ❌ No implementado | 🔴 TODO |
+| **Push Notifications** | ❌ Firebase pending | ❌ Firebase pending | 🔴 TODO |
+
+### **🟡 En Desarrollo / Versión Beta**
+
+```
+- Autenticación de usuarios (Login/Signup)
+- Integración con credenciales Firebase
+- Persistencia de sesión (SharedPreferences)
+- Notificaciones Push integradas
+```
+
+### **🔴 No Iniciado / Próximas Fases**
+
+```
+- Integración con bases de datos oficiales (MPGC, Policía)
+- Machine Learning para patrones de delincuencia
+- Histórico de reportes y trending
+- Analytics dashboard
+- API Gateway y Rate Limiting
+```
+
+---
+
 ## 🔌 Endpoints Disponibles
 
 ### **Módulo de Reportes**
@@ -796,4 +865,4 @@ Desarrollado por el equipo Alertify.
 
 ---
 
-**Última actualización**: 28 de febrero de 2026
+**Última actualización**: 04 de marzo de 2026
