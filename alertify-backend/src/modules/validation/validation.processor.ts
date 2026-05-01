@@ -1,5 +1,5 @@
-import { Processor, WorkerHost } from '@nestjs/bullmq';
-import type { Job } from 'bullmq';
+import { Processor, WorkerHost, InjectQueue } from '@nestjs/bullmq';
+import type { Job, Queue } from 'bullmq';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Report } from '../reports/entities/report.entity';
@@ -7,7 +7,7 @@ import { User } from '../identity/entities/user.entity';
 import { ReportsGateway } from '../reports/gateways/reports.gateway';
 import { HeatmapDataService } from '../reports/etl/services/heatmap-data.service';
 
-@Processor('report-validation') // Nombre de la cola definida anteriormente
+@Processor('report-validation')
 export class ValidationProcessor extends WorkerHost {
   constructor(
     @InjectRepository(Report)
@@ -16,7 +16,9 @@ export class ValidationProcessor extends WorkerHost {
     private readonly userRepository: Repository<User>,
     private readonly reportsGateway: ReportsGateway,
     private readonly heatmapDataService: HeatmapDataService,
-     // Para emitir eventos en tiempo real
+    // Cola de despacho de alertas — Sprint 4 (T13/T14)
+    @InjectQueue('alert-dispatch')
+    private readonly alertQueue: Queue,
   ) {
     super();
   }
@@ -56,8 +58,9 @@ export class ValidationProcessor extends WorkerHost {
     // 4. Actualizar estado y puntaje del reporte [cite: 625, 626]
     report.PuntajeConfianza = finalCS;
     if (finalCS >= 0.60) {
-      report.Estado = 1; // Validado [cite: 676, 677]
-      
+      report.Estado = 1; // Validado
+
+      // Notificar al dashboard web en tiempo real (Socket.io)
       this.reportsGateway.emitNewReport({
         id: report.IdReporte,
         description: report.Descripcion,
@@ -68,6 +71,30 @@ export class ValidationProcessor extends WorkerHost {
 
       const heatmapPoints = await this.heatmapDataService.getHeatmapPoints(30);
       this.reportsGateway.emitHeatmapUpdate(heatmapPoints);
+
+      // ── Sprint 4: Publicar job de alerta push ──────────────────────────
+      // AlertsProcessor consumirá este job para:
+      //   1. Consultar usuarios en radio 1km (T13 — STDistance)
+      //   2. Enviar notificación push via Firebase (T14 — FCM)
+      await this.alertQueue.add(
+        'dispatch-alert',
+        {
+          reportId: report.IdReporte,
+          incidentTypeId: report.IdTipoIncidente,
+          location: {
+            latitude: coords?.latitude,
+            longitude: coords?.longitude,
+          },
+          trustScore: finalCS,
+          timestamp: new Date(),
+        },
+        {
+          // Reintentar hasta 3 veces con backoff exponencial si Firebase falla
+          attempts: 3,
+          backoff: { type: 'exponential', delay: 5000 },
+        },
+      );
+      // ──────────────────────────────────────────────────────────────────
     } else {
       report.Estado = 2; // Rechazado o requiere más votos
     }

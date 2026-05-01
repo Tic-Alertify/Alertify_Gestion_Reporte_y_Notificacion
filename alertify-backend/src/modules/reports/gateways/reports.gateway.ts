@@ -38,7 +38,19 @@ export class ReportsGateway
   }
 
   handleConnection(client: Socket, ...args: any[]) {
-    this.logger.log(`Client connected: ${client.id}`);
+    // Intentamos extraer el ID de usuario desde el handshake si la app lo envía
+    // Si no, generamos uno basado en el ID del socket para el log
+    const userIdStr = client.handshake.query.userId as string;
+    const userId = userIdStr ? userIdStr : client.id.substring(0, 4);
+    client.data.userId = userId; // Lo guardamos en el socket para el disconnect
+
+    // Formatear fecha al estilo solicitado: 30/04/2026 14:10:05
+    const now = new Date();
+    const dateStr = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+    
+    // Log personalizado solicitado
+    console.log(`[Nest] Log - ${dateStr} Nuevo ciudadano activo en el mapa: ID_${userId}`);
+
     // Enviar bienvenida con información del servidor
     client.emit('connected', {
       message: 'Conectado al servidor de reportes Alertify ECU911',
@@ -47,7 +59,12 @@ export class ReportsGateway
   }
 
   handleDisconnect(client: Socket) {
-    this.logger.log(`Client disconnected: ${client.id}`);
+    const userId = client.data.userId || client.id.substring(0, 4);
+    const now = new Date();
+    const dateStr = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+    
+    // Log personalizado solicitado
+    console.log(`[Nest] Log - ${dateStr} Cliente desconectado (App en segundo plano): ID_${userId} -> Recurso liberado.`);
   }
 
   /**

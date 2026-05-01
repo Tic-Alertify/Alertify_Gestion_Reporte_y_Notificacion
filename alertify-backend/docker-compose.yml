@@ -39,6 +39,12 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       NODE_ENV: development
+      # Sprint 4: Radio de alerta en metros (T13)
+      ALERT_RADIUS_METERS: ${ALERT_RADIUS_METERS:-1000}
+      # Sprint 4: Firebase Admin SDK (T14) — completar en .env
+      FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID}
+      FIREBASE_CLIENT_EMAIL: ${FIREBASE_CLIENT_EMAIL}
+      FIREBASE_PRIVATE_KEY: ${FIREBASE_PRIVATE_KEY}
     depends_on:
       - sqlserver
       - redis

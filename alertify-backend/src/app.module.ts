@@ -5,12 +5,18 @@ import { BullModule } from '@nestjs/bullmq';
 import { ReportsModule } from './modules/reports/reports.module';
 import { ValidationModule } from './modules/validation/validation.module';
 import { IdentityModule } from './modules/identity/identity.module';
+import { AlertsModule } from './modules/alerts/alerts.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
 import { BullBoardModule } from '@bull-board/nestjs';
 import { ExpressAdapter } from '@bull-board/express';
 
 /**
  * Root application module. Configures database, queue broker (Redis),
  * monitoring dashboard (Bull Board), and feature modules.
+ *
+ * Módulos del Sprint 4:
+ *   - AlertsModule:        Worker BullMQ + consultas STDistance (T13)
+ *   - NotificationsModule: Firebase Admin SDK para push FCM (T14)
  */
 @Module({
   imports: [
@@ -42,15 +48,21 @@ import { ExpressAdapter } from '@bull-board/express';
         encrypt: false,
         trustServerCertificate: true,
         connectTimeout: 90000,
+        useUTC: true,
       },
       retryAttempts: 30,
       retryDelay: 3000,
       dropSchema: false,
     }),
 
+    // Módulos existentes (Sprints 1–3)
     IdentityModule,
     ReportsModule,
     ValidationModule,
+
+    // Módulos nuevos — Sprint 4: Sistema de Alertas y Notificaciones Push
+    AlertsModule,
+    NotificationsModule,
   ],
 })
-export class AppModule {}
+export class AppModule { }

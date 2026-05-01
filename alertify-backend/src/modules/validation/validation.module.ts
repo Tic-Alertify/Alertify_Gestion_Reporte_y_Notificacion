@@ -10,12 +10,17 @@ import { EtlModule } from '../reports/etl/etl.module';
 @Module({
   imports: [
     TypeOrmModule.forFeature([Report, User]),
+    // Cola de validación (produce los jobs)
     BullModule.registerQueue({
       name: 'report-validation',
     }),
-    ReportsModule, // Para ReportsGateway
-    EtlModule,     // Para HeatmapDataService y otros servicios de ETL
+    // Cola de alertas — Sprint 4: ValidationProcessor necesita inyectarla para publicar
+    BullModule.registerQueue({
+      name: 'alert-dispatch',
+    }),
+    ReportsModule,
+    EtlModule,
   ],
   providers: [ValidationProcessor],
 })
-export class ValidationModule {}
+export class ValidationModule {}

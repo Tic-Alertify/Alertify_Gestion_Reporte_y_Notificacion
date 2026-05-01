@@ -35,6 +35,22 @@ export class ReportsService {
       throw new BadRequestException('El incidente se encuentra fuera de la zona de cobertura (Quito).');
     }
 
+    // 1.5 DETECCIÓN DE SPAM (T11)
+    // Evita reportes duplicados del mismo usuario en menos de 10 min a 500m a la redonda
+    const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
+    const incidentPoint = `POINT(${dto.longitude} ${dto.latitude})`;
+    
+    const recentDuplicate = await this.reportRepository.createQueryBuilder('r')
+      .where('r.IdUsuario = :userId', { userId: dto.userId })
+      .andWhere('r.IdTipoIncidente = :incidentType', { incidentType: dto.incidentTypeId })
+      .andWhere('r.FechaHoraRegistro >= :tenMinutesAgo', { tenMinutesAgo })
+      .andWhere('r.UbicacionGeografica.STDistance(geography::STGeomFromText(:point, 4326)) <= 500', { point: incidentPoint })
+      .getOne();
+
+    if (recentDuplicate) {
+      throw new BadRequestException('Has reportado un incidente similar muy cerca en los últimos 10 minutos. (Detección de Spam)');
+    }
+
     // 2. Crear la entidad con coordenadas (el transformer las convierte a WKT)
     const newReport = this.reportRepository.create({
       IdUsuario: dto.userId,

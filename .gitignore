@@ -1,0 +1,443 @@
+# git ignore for frontend
+
+# Gradle
+.gradle/
+build/
+local.properties
+
+# IDE files
+.idea/
+*.iml
+*.hprof
+
+# APKs
+*.apk
+*.aab
+
+# Keystore
+*.jks
+*.keystore
+
+# Google services
+google-services.json
+
+# Proguard
+proguard/
+*.map
+
+# Captures
+captures/
+
+# Mac
+.DS_Store
+
+
+# git ignore backend
+
+# compiled output
+/dist
+/node_modules
+/build
+
+# Logs
+logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# OS
+.DS_Store
+
+# Tests
+/coverage
+/.nyc_output
+
+# IDEs and editors
+/.idea
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# IDE - VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# dotenv environment variable files
+.env
+.env.development.local
+.env.test.local
+.env.production.local
+.env.local
+
+# temp directory
+.temp
+.tmp
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Diagnostic reports (https://nodejs.org/api/report.html)
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# =============================================================================
+# Alertify Frontend (.gitignore) - Android Studio / Gradle / Kotlin
+# =============================================================================
+
+# Android Studio Build System & Gradle
+.gradle/
+build/
+local.properties
+gradle-app.setting
+!gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.jar
+*.gradletasknamecache
+
+# Built APK, AAB, Bundle
+*.apk
+*.ap_
+*.aab
+*.abe
+*.bundle
+*.split.apk
+
+# Signing artifacts
+*.jks
+*.keystore
+*.pfx
+*.p12
+*.pem
+*.key
+signing.properties
+*.keystore.properties
+
+# IDE - Android Studio
+.idea/
+.ideaDataSources.xml
+*.iml
+*.iws
+*.ipr
+out/
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-project
+*.sublime-workspace
+.externalNativeBuild
+.cxx
+
+# IDE - IntelliJ
+*.class
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+.idea_modules/
+
+# IDE - VS Code (optional, if used)
+.vscode/
+*.code-workspace
+
+# Local Android project properties
+local.properties
+gradle.properties
+
+# Google Play Services & Firebase
+google-services.json
+firebase-config.json
+
+# Generated files by Android Studio/Gradle
+src/main/java/com/alertify/app/databinding/*.java
+app/build/generated/
+src/main/java/androidx/**
+
+# Proguard & Optimization
+proguard/
+*.map
+proguard-cache/
+mapping.txt
+seeds.txt
+usage.txt
+dump.txt
+
+# Android captures
+captures/
+screenshots/
+screenrecordings/
+
+# Android profiler
+profiler.output/
+
+# Lint reports
+lint-report.html
+lint-report.xml
+lint-results*.html
+lint-results*.xml
+
+# Unit Test / Coverage Reports
+coverage/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+junit.xml
+test-results/
+
+# Mac OS X
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+.cache
+.dbus
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.swp
+*~
+.DS_Store
+
+# Backup and crash report files
+*.bak
+crash-log.txt
+crash-report.txt
+*.jtrace
+
+# Kotlin
+.kotlin
+kotlin-build/
+out
+*.kt.bak
+
+# Git
+.gitk
+
+# Emulator specific
+.emulator_console_auth_token
+qemu.log
+qemu.log.old
+emulator.ini
+
+# Gradle Wrapper
+gradle/wrapper/
+
+# Generated manifest files
+build/intermediates/manifests/
+
+# Data Binding
+src/main/java/com/alertify/app/**/*Binding.java
+src/main/java/com/alertify/app/**/Generated*.java
+app/build/generated/
+
+# ExoPlayer
+.exo-internal
+
+# Misc
+.cargo
+.rustup
+fcm-key.json
+secrets.gradle
+api-keys.properties
+
+# Device Specific
+local-ndk-path.properties
+
+# Test Reports
+androidTest-results/
+test-reports/
+
+# IDE Cache
+.vscode-settings.json
+.prettierrc.local
+
+# NDK
+ndkBuild/
+
+# Compose Compiler Metrics
+compose-metrics/
+composition-reports/
+
+# =============================================================================
+# Alertify Backend (.gitignore) - NestJS / Node / Docker / Environment
+# =============================================================================
+
+# CRITICAL: Never commit environment variables with secrets
+# All .env files are ignored except .env.example (if you want to share template)
+.env
+.env.local
+.env.*.local
+.env.production
+.env.development
+.env.test
+.env.*.production
+.env.*.development
+
+# Node.js Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+npm-shrinkwrap.json
+
+# Build Outputs
+dist/
+build/
+*.tsbuildinfo
+.nest-cli.json.build
+
+# Compiled JavaScript (keep .js files in .gitignore for TS projects)
+*.js
+*.js.map
+!jest.config.js
+!eslint.config.mjs
+!nest-cli.json
+!nestjs-cli-config.js
+
+# Code Coverage & Testing
+coverage/
+.nyc_output/
+junit.xml
+test-results/
+*.lcov
+
+# Logs & Debugging
+logs/
+log/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+debug/
+.debug/
+
+# Operating System
+.DS_Store
+Thumbs.db
+._*
+.AppleDouble
+.LSOverride
+
+# IDE & Editor Configuration
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea/
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-project
+*.sublime-workspace
+.netbeans/
+
+# Database & Cache Files
+*.db
+*.sqlite
+*.sqlite3
+dump.rdb
+.cache/
+.eslintcache
+
+# Temporary & Cache Directories
+tmp/
+temp/
+.temp/
+.tmp/
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Docker & Containerization
+.dockerignore
+docker-compose.override.yml
+
+# Backup & Temporary Files
+*.bak
+*.backup
+*~
+*.swp
+*.swo
+
+# Security: Private Keys & Certificates
+*.pem
+*.key
+*.pfx
+*.p12
+*.cert
+*.crt
+*.csr
+
+# Diagnostic Reports
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# Generated & Auto-generated
+generated/
+auto-generated/
+.generated/
+
+# IDE Cache
+.vscode-settings.json
+.prettierrc.local
+
+# OS Lock Files
+.DS_Store
+Thumbs.db
+
+# Misc
+.cargo
+.rustup
+out/
+
+# =========================
+# Documentación innecesaria
+# =========================
+
+# Ignorar PDFs (pesados)
+*.pdf
+
+# Ignorar documentación interna (pero NO README)
+DOCUMENTACION_*.md
+DIAGRAMAS_*.md
+GUIA_*.md
+INDICE_*.md
+
+# Opcional: ignorar carpetas de docs si luego creas
+docs/
+
