@@ -42,7 +42,6 @@ export class ReportsService {
     
     const recentDuplicate = await this.reportRepository.createQueryBuilder('r')
       .where('r.IdUsuario = :userId', { userId: dto.userId })
-      .andWhere('r.IdTipoIncidente = :incidentType', { incidentType: dto.incidentTypeId })
       .andWhere('r.FechaHoraRegistro >= :tenMinutesAgo', { tenMinutesAgo })
       .andWhere('r.UbicacionGeografica.STDistance(geography::STGeomFromText(:point, 4326)) <= 500', { point: incidentPoint })
       .getOne();
