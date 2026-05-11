@@ -616,30 +616,77 @@ programa/
 | **Algoritmo de Confianza** | ✅ 3-factor score (R+H+C) | - | 🟢 PROD |
 | **Consultas Espaciales** | ✅ STDistance, STBuffer | ✅ Google Maps | 🟢 PROD |
 | **Gestión de Usuarios** | ✅ IdentityModule | ❌ Login | 🟡 PARCIAL |
-| **WebSocket Real-time** | ✅ ReportsGateway | ❌ Listener | 🟡 PARCIAL |
+| **WebSocket Real-time** | ✅ ReportsGateway | ✅ Escucha Activa | 🟢 PROD |
 | **Heatmap de Reportes** | ✅ GET /heatmap/* endpoints | ✅ Mapa interactivo | 🟢 PROD |
 | **Monitoreo de Colas** | ✅ Bull Board | - | 🟢 PROD |
 | **OAuth/JWT** | ❌ No implementado | ❌ No implementado | 🔴 TODO |
-| **Push Notifications** | ❌ Firebase pending | ❌ Firebase pending | 🔴 TODO |
+| **Push Notifications (Alertas)** | ❌ Firebase (Servidor) | ❌ Firebase (Cliente) | 🔴 TODO |
 
-### **🟡 En Desarrollo / Versión Beta**
+### **🗺️ Módulo de Reportes y Alertas (Estado Actual)**
+- **Funcionamiento**: El módulo de reportes está **100% operativo** en flujo completo (Frontend -> Backend -> Base de Datos). El usuario escoge una categoría, agrega una descripción (máx 100 caracteres) y la app envía sus coordenadas exactas de forma georreferenciada.
+- **Validación y Spam**: El backend tiene una defensa sólida anti-spam que bloquea cualquier reporte duplicado en un radio de 500m durante 10 minutos por el mismo usuario (indistintamente de si cambia la categoría del reporte).
+- **Mapeo y UI**: El frontend cuenta con un `HeatmapFragment` (Dashboard) que solicita y renderiza *solo* los reportes aprobados globalmente para formar un mapa de calor y listado de incidentes validados. Los marcadores son dinámicos y sin bordes residuales.
+- **Notificaciones/Alertas Push**: Aún pendiente. La lógica de negocio está lista en el servidor para lanzar notificaciones si el score del reporte es ≥ 0.7, pero falta la inyección del SDK de Firebase Cloud Messaging.
 
-```
-- Autenticación de usuarios (Login/Signup)
-- Integración con credenciales Firebase
-- Persistencia de sesión (SharedPreferences)
-- Notificaciones Push integradas
-```
+---
 
-### **🔴 No Iniciado / Próximas Fases**
+## 🔑 Archivos Críticos y Configuración de Conexión
 
-```
-- Integración con bases de datos oficiales (MPGC, Policía)
-- Machine Learning para patrones de delincuencia
-- Histórico de reportes y trending
-- Analytics dashboard
-- API Gateway y Rate Limiting
-```
+Para que la aplicación funcione en su totalidad y el frontend móvil logre comunicarse exitosamente con el backend local o en producción, se requieren archivos específicos en cada entorno:
+
+### **1. Requisitos y Configuración del Frontend (Alertify_App)**
+
+La aplicación móvil Android depende de configuraciones locales que **no se suben al repositorio** por motivos de seguridad y variables de red.
+
+*   **`local.properties` (En la raíz del Frontend):**
+    Debe contener la API Key de Google Maps para que la cartografía y la geolocalización puedan renderizarse.
+    ```properties
+    MAPS_API_KEY=AIzaSyA_tu_clave_de_google_maps_aqui
+    ```
+*   **`google-services.json` (Ubicado en `app/google-services.json`):**
+    Archivo obligatorio descargado desde la consola de Firebase. Sin este archivo, el proyecto de Android Studio fallará al compilar. Contiene los identificadores necesarios para conectar el frontend con el servicio de alertas push.
+*   **Conexión de Red (IP Local vs Emulador):**
+    Si estás probando la app en un **dispositivo físico conectado a tu WiFi**, el backend no puede ser accedido mediante `localhost` ni `10.0.2.2` (exclusivo de emuladores). 
+    Debes configurar tu IP local en el archivo `core/build.gradle.kts`:
+    ```kotlin
+    // core/build.gradle.kts (Ejemplo de configuración)
+    buildTypes {
+        debug {
+            // Reemplaza 192.168.100.35 con tu IPv4 de Windows (ipconfig)
+            buildConfigField("String", "API_BASE_URL", "\"http://192.168.100.35:3000/\"")
+            buildConfigField("String", "SOCKET_URL", "\"http://192.168.100.35:3000\"")
+        }
+    }
+    ```
+
+### **2. Requisitos y Configuración del Backend**
+
+El servidor de NestJS necesita obligatoriamente su entorno de variables configurado y dependencias activas.
+
+*   **`.env` (En la raíz de alertify-backend):**
+    Sin este archivo, el backend fallará al arrancar ya que no sabrá a qué base de datos conectarse.
+    ```env
+    # Base de Datos (Docker SQL Server)
+    DB_HOST=localhost
+    DB_PORT=1433
+    DB_USERNAME=sa
+    DB_PASSWORD=Alertify_Pass2026!
+    DB_DATABASE=AlertifyDB
+
+    # Redis (Para BullMQ y WebSockets)
+    REDIS_HOST=localhost
+    REDIS_PORT=6379
+
+    # Configuración de Red para Servidor
+    PORT=3000
+    ```
+*   **Escucha de Red (0.0.0.0):**
+    Para que el dispositivo móvil Android físico logre acceder a la API en la IP local (`192.168.100.X`), el backend (NestJS) debe estar configurado en el archivo `main.ts` para escuchar en todas las interfaces de red:
+    ```typescript
+    await app.listen(3000, '0.0.0.0'); // Fundamental para pruebas en dispositivo real
+    ```
+*   **Infraestructura de Docker:**
+    Antes de lanzar `npm run start:dev`, los contenedores de `SQL Server` y `Redis` deben estar corriendo y completamente inicializados ejecutando `docker-compose up -d`.
 
 ---
 

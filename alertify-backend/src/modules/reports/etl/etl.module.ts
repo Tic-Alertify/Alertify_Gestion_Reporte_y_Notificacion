@@ -3,6 +3,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { OfficialHistory } from '../entities/official-history.entity';
 import { Parish } from '../entities/parish.entity';
+import { Report } from '../entities/report.entity';
 import { EtlController } from './controllers/etl.controller';
 import { Ecu911IngestaImprovedService } from './services/ecu911-ingesta-improved.service';
 import { Ecu911FilterService } from './services/ecu911-filter.service';
@@ -17,7 +18,7 @@ import { ParishLoaderService } from './services/parish-loader.service';
  * - Generación de datos básicos
  */
 @Module({
-  imports: [TypeOrmModule.forFeature([OfficialHistory, Parish])],
+  imports: [TypeOrmModule.forFeature([OfficialHistory, Parish, Report])],
   controllers: [EtlController],
   providers: [
     Ecu911IngestaImprovedService,

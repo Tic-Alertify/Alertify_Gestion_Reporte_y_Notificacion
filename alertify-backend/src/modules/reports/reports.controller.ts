@@ -37,9 +37,13 @@ export class ReportsController {
    * @returns Array of aggregated heatmap points with intensity levels
    */
   @Get('heatmap/data')
-  async getHeatmapData(@Query('daysBack') daysBack: string = '30') {
+  async getHeatmapData(
+    @Query('daysBack') daysBack?: string,
+    @Query('days') days?: string,
+  ) {
+    const filterDays = days || daysBack || '30';
     return await this.reportsService.getHeatmapDataWithIntensity(
-      parseInt(daysBack, 10),
+      parseInt(filterDays, 10),
     );
   }
 
@@ -50,8 +54,12 @@ export class ReportsController {
    * @returns Array of Report entities with geographic coordinates
    */
   @Get('heatmap/points')
-  async getHeatmapPoints(@Query('daysBack') daysBack: string = '30') {
-    return await this.reportsService.getHeatmapPoints(parseInt(daysBack, 10));
+  async getHeatmapPoints(
+    @Query('daysBack') daysBack?: string,
+    @Query('days') days?: string,
+  ) {
+    const filterDays = days || daysBack || '30';
+    return await this.reportsService.getHeatmapPoints(parseInt(filterDays, 10));
   }
 
   /**
@@ -61,8 +69,12 @@ export class ReportsController {
    * @returns Array with date and report count per day
    */
   @Get('heatmap/daily-stats')
-  async getDailyStats(@Query('daysBack') daysBack: string = '30') {
-    return await this.reportsService.getDailyStats(parseInt(daysBack, 10));
+  async getDailyStats(
+    @Query('daysBack') daysBack?: string,
+    @Query('days') days?: string,
+  ) {
+    const filterDays = days || daysBack || '30';
+    return await this.reportsService.getDailyStats(parseInt(filterDays, 10));
   }
 
   /**
@@ -126,11 +138,13 @@ export class ReportsController {
   @Get('heatmap/clusters')
   async getHeatmapClusters(
     @Query('radiusKm') radiusKm: string = '0.5',
-    @Query('daysBack') daysBack: string = '30',
+    @Query('daysBack') daysBack?: string,
+    @Query('days') days?: string,
   ) {
+    const filterDays = days || daysBack || '30';
     return await this.reportsService.getHeatmapClusters(
       parseFloat(radiusKm),
-      parseInt(daysBack, 10),
+      parseInt(filterDays, 10),
     );
   }
 

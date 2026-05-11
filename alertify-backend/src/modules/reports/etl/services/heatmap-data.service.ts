@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { OfficialHistory } from '../../entities/official-history.entity';
+import { Report } from '../../entities/report.entity';
 
 /**
  * Interfaz para punto de heatmap individual
@@ -36,6 +37,8 @@ export class HeatmapDataService {
   constructor(
     @InjectRepository(OfficialHistory)
     private readonly officialHistoryRepo: Repository<OfficialHistory>,
+    @InjectRepository(Report)
+    private readonly reportRepo: Repository<Report>,
   ) {}
 
   /**
@@ -109,13 +112,27 @@ export class HeatmapDataService {
     startDate.setDate(startDate.getDate() - daysBack);
 
     try {
-      const records = await this.officialHistoryRepo
+      // 1. Obtener Historial Oficial
+      const officialPromise = this.officialHistoryRepo
         .createQueryBuilder('oh')
         .where('oh.FechaHoraOcurrencia >= :startDate', { startDate })
         .orderBy('oh.FechaHoraOcurrencia', 'DESC')
         .getMany();
 
-      return records.map((record) => {
+      // 2. Obtener Reportes Ciudadanos Validados
+      const citizenPromise = this.reportRepo
+        .createQueryBuilder('r')
+        .where('r.Estado = :estado', { estado: 1 })
+        .andWhere('r.FechaHoraRegistro >= :startDate', { startDate })
+        .orderBy('r.FechaHoraRegistro', 'DESC')
+        .getMany();
+
+      const [officialRecords, citizenRecords] = await Promise.all([
+        officialPromise,
+        citizenPromise,
+      ]);
+
+      const officialPoints = officialRecords.map((record) => {
         const { lat, lng } = this.extractCoordinates(record.UbicacionGeografica);
         const intensity = this.calculateIntensity(1);
 
@@ -130,6 +147,31 @@ export class HeatmapDataService {
           reportNumber: record.IdExterno,
         };
       });
+
+      const citizenPoints = citizenRecords.map((record) => {
+        // En Report, UbicacionGeografica ya puede ser un objeto o se parsea
+        let lat = 0;
+        let lng = 0;
+        if (record.UbicacionGeografica) {
+           lat = record.UbicacionGeografica.latitude ?? 0;
+           lng = record.UbicacionGeografica.longitude ?? 0;
+        }
+
+        const intensity = this.calculateIntensity(1);
+
+        return {
+          id: record.IdReporte,
+          latitude: lat,
+          longitude: lng,
+          count: 1,
+          intensity: intensity,
+          color: this.calculateColor(intensity), // Ciudadano
+          date: record.FechaHoraRegistro,
+          reportNumber: `CITIZEN-${record.IdReporte}`,
+        };
+      });
+
+      return [...officialPoints, ...citizenPoints];
     } catch (error) {
       this.logger.error('Error en getHeatmapPoints', error);
       throw error;
@@ -193,14 +235,31 @@ export class HeatmapDataService {
     startDate.setDate(startDate.getDate() - daysBack);
 
     try {
-      const records = await this.officialHistoryRepo
+      const officialPromise = this.officialHistoryRepo
         .createQueryBuilder('oh')
         .where('oh.FechaHoraOcurrencia >= :startDate', { startDate })
         .getMany();
 
+      const citizenPromise = this.reportRepo
+        .createQueryBuilder('r')
+        .where('r.Estado = :estado', { estado: 1 })
+        .andWhere('r.FechaHoraRegistro >= :startDate', { startDate })
+        .getMany();
+
+      const [officialRecords, citizenRecords] = await Promise.all([
+        officialPromise,
+        citizenPromise,
+      ]);
+
       const statsByDate: { [key: string]: number } = {};
-      records.forEach((record) => {
+      
+      officialRecords.forEach((record) => {
         const dateStr = record.FechaHoraOcurrencia.toISOString().split('T')[0];
+        statsByDate[dateStr] = (statsByDate[dateStr] || 0) + 1;
+      });
+
+      citizenRecords.forEach((record) => {
+        const dateStr = record.FechaHoraRegistro.toISOString().split('T')[0];
         statsByDate[dateStr] = (statsByDate[dateStr] || 0) + 1;
       });
 
