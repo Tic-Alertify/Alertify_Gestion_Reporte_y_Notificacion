@@ -6,15 +6,20 @@ import {
   ParseIntPipe,
   HttpCode,
   HttpStatus,
+  Post,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
 import { IdentityService } from './identity.service';
 import { UpdateFcmTokenDto } from './dto/update-fcm-token.dto';
 import { UpdateLocationDto } from './dto/update-location.dto';
+import { EnsureUserDto } from './dto/ensure-user.dto';
 
 /**
  * Controlador REST para operaciones de identidad y configuración de dispositivo.
  *
  * Endpoints expuestos:
+ *   POST /users/ensure      → Asegura que el usuario exista en reportes
  *   PATCH /users/:id/fcm-token  → Registra/actualiza el token FCM del dispositivo
  *   PATCH /users/:id/location   → Actualiza la ubicación GPS del usuario
  *
@@ -37,6 +42,16 @@ export class IdentityController {
    * @param id      ID del usuario autenticado
    * @param body    { fcmToken: string | null }
    */
+  @Post('ensure')
+  @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
+  @HttpCode(HttpStatus.OK)
+  async ensureUser(
+    @Body() body: EnsureUserDto,
+  ): Promise<{ userId: number }> {
+    const user = await this.identityService.ensureUser(body.userId);
+    return { userId: user.IdUsuario };
+  }
+
   @Patch(':id/fcm-token')
   @HttpCode(HttpStatus.NO_CONTENT)
   async updateFcmToken(

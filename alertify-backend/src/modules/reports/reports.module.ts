@@ -10,6 +10,7 @@ import { BullBoardModule } from '@bull-board/nestjs';
 import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
 import { EtlModule } from './etl/etl.module';
 import { ReportsGateway } from './gateways/reports.gateway';
+import { IdentityModule } from '../identity/identity.module';
 
 /**
  * Módulo de Reportes
@@ -31,6 +32,7 @@ import { ReportsGateway } from './gateways/reports.gateway';
       name: 'report-validation',
       adapter: BullMQAdapter,
     }),
+    IdentityModule,
     // Módulo ETL mejorado con servicios de ingesta y heatmap
     EtlModule,
   ],

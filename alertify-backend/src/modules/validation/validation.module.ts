@@ -6,9 +6,12 @@ import { Report } from '../reports/entities/report.entity';
 import { User } from '../identity/entities/user.entity';
 import { ReportsModule } from '../reports/reports.module';
 import { EtlModule } from '../reports/etl/etl.module';
+import { IdentityModule } from '../identity/identity.module';
+import { HttpModule } from '@nestjs/axios';
 
 @Module({
   imports: [
+    HttpModule,
     TypeOrmModule.forFeature([Report, User]),
     // Cola de validación (produce los jobs)
     BullModule.registerQueue({
@@ -19,8 +22,9 @@ import { EtlModule } from '../reports/etl/etl.module';
       name: 'alert-dispatch',
     }),
     ReportsModule,
+    IdentityModule,
     EtlModule,
   ],
   providers: [ValidationProcessor],
 })
-export class ValidationModule {}
+export class ValidationModule {}

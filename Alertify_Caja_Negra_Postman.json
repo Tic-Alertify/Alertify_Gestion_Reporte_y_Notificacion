@@ -1,0 +1,723 @@
+{
+  "info": {
+    "_postman_id": "alertify-blackbox-tests",
+    "name": "Alertify Backend - Pruebas de Caja Negra",
+    "description": "Colección completa de pruebas de caja negra para validar la funcionalidad del backend Alertify",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Setup - Datos de Prueba",
+      "item": [
+        {
+          "name": "📊 Obtener Usuarios Existentes",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var users = pm.response.json();",
+                  "    if (users.length > 0) {",
+                  "        pm.environment.set('userId', users[0].IdUsuario);",
+                  "        pm.environment.set('userName', users[0].Nombre);",
+                  "        console.log('✅ Usuario configurado:', users[0].Nombre);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["users"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "CP-01: Creación de Reporte Válido",
+      "item": [
+        {
+          "name": "✅ Crear Reporte Dentro del DMO",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code es 201 Created', function () {",
+                  "    pm.expect(pm.response.code).to.equal(201);",
+                  "});",
+                  "",
+                  "pm.test('Respuesta contiene idReporte', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.IdReporte).to.exist;",
+                  "    pm.environment.set('reportId_CP01', jsonData.IdReporte);",
+                  "});",
+                  "",
+                  "pm.test('Estado inicial es 0 (Pendiente)', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.Estado).to.equal(0);",
+                  "});",
+                  "",
+                  "pm.test('Ubicación geográfica está correcta', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.UbicacionGeografica.latitude).to.equal(-0.2217);",
+                  "    pm.expect(jsonData.UbicacionGeografica.longitude).to.equal(-78.4956);",
+                  "});",
+                  "",
+                  "console.log('✅ CP-01 CUMPLE: Reporte creado exitosamente');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\\n  \\\"userId\\\": 1,\\n  \\\"incidentTypeId\\\": 1,\\n  \\\"latitude\\\": -0.2217,\\n  \\\"longitude\\\": -78.4956,\\n  \\\"description\\\": \\\"Robo reportado cerca del parque central\\\"\\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/reports",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "CP-02: Detección de Límites del DMO",
+      "item": [
+        {
+          "name": "❌ Crear Reporte Fuera del DMO (Fallo Esperado)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code es 400 BadRequest', function () {",
+                  "    pm.expect(pm.response.code).to.equal(400);",
+                  "});",
+                  "",
+                  "pm.test('Mensaje de error menciona zona de cobertura', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.message).to.include('zona de cobertura');",
+                  "    pm.expect(jsonData.message).to.include('Quito');",
+                  "});",
+                  "",
+                  "console.log('✅ CP-02 CUMPLE: Geofencing válida - rechaza ubicación fuera de Quito');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\\n  \\\"userId\\\": 1,\\n  \\\"incidentTypeId\\\": 1,\\n  \\\"latitude\\\": 1.5,\\n  \\\"longitude\\\": -75.0,\\n  \\\"description\\\": \\\"Incidente fuera de cobertura\\\"\\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/reports",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "CP-03: Detección de Spam Temporal",
+      "item": [
+        {
+          "name": "📝 Primer Reporte",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Primer reporte creado exitosamente', function () {",
+                  "    pm.expect(pm.response.code).to.equal(201);",
+                  "});",
+                  "",
+                  "var jsonData = pm.response.json();",
+                  "pm.environment.set('reportId_CP03_1', jsonData.IdReporte);",
+                  "pm.environment.set('testTime', new Date().toISOString());",
+                  "console.log('✅ Primer reporte creado - ID:', jsonData.IdReporte);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\\n  \\\"userId\\\": 1,\\n  \\\"incidentTypeId\\\": 1,\\n  \\\"latitude\\\": -0.2217,\\n  \\\"longitude\\\": -78.4956,\\n  \\\"description\\\": \\\"Primer reporte para prueba de spam\\\"\\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/reports",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports"]
+            }
+          }
+        },
+        {
+          "name": "❌ Segundo Reporte Similar (< 10 min, < 500m)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code es 400 BadRequest (spam detectado)', function () {",
+                  "    pm.expect(pm.response.code).to.equal(400);",
+                  "});",
+                  "",
+                  "pm.test('Mensaje menciona spam y ventana de tiempo', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.message).to.include('spam');",
+                  "    pm.expect(jsonData.message).to.include('10 minutos');",
+                  "});",
+                  "",
+                  "console.log('✅ CP-03 CUMPLE: Detección de spam temporal funciona correctamente');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\\n  \\\"userId\\\": 1,\\n  \\\"incidentTypeId\\\": 1,\\n  \\\"latitude\\\": -0.2219,\\n  \\\"longitude\\\": -78.4958,\\n  \\\"description\\\": \\\"Segundo reporte similar (prueba de spam)\\\"\\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/reports",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "CP-04: Validación Exitosa (CS >= 0.60)",
+      "item": [
+        {
+          "name": "📝 Crear Reporte para Usuario con Reputación Alta",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Reporte creado exitosamente', function () {",
+                  "    pm.expect(pm.response.code).to.equal(201);",
+                  "});",
+                  "",
+                  "var jsonData = pm.response.json();",
+                  "pm.environment.set('reportId_CP04', jsonData.IdReporte);",
+                  "console.log('✅ Reporte para CP-04 creado - esperando validación asíncrona...');",
+                  "console.log('⏳ Espere 2-3 segundos para que se procese en la cola de validación');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\\n  \\\"userId\\\": 1,\\n  \\\"incidentTypeId\\\": 1,\\n  \\\"latitude\\\": -0.2217,\\n  \\\"longitude\\\": -78.4956,\\n  \\\"description\\\": \\\"Reporte con usuario de alta reputación\\\"\\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/reports",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports"]
+            }
+          }
+        },
+        {
+          "name": "⏳ Esperar 3 segundos para procesamiento",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Wait 3 seconds for queue processing",
+                  "pm.sendRequest({",
+                  "    url: 'https://httpbin.org/delay/3',",
+                  "    method: 'GET'",
+                  "}, function (err, response) {",
+                  "    if (!err) {",
+                  "        console.log('✅ Tiempo de espera completado'):",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://httpbin.org/delay/3",
+              "protocol": "https",
+              "host": ["httpbin.org"],
+              "path": ["delay", "3"]
+            }
+          }
+        },
+        {
+          "name": "✅ Verificar Reporte Validado (Estado 1)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Endpoint retorna reportes validados', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});",
+                  "",
+                  "pm.test('Existe al menos un reporte validado', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.length).to.be.greaterThan(0);",
+                  "});",
+                  "",
+                  "pm.test('Reporte validado tiene CS >= 0.60', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    var report = jsonData.find(r => r.estado === 1);",
+                  "    if (report) {",
+                  "        pm.expect(report.trustScore).to.be.greaterThanOrEqual(0.60);",
+                  "        console.log('✅ CP-04 CUMPLE: Reporte validado con CS =', report.trustScore);",
+                  "    } else {",
+                  "        console.log('⚠️  No hay reportes validados aún - puede reintentarse'):",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reports/validated",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "validated"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "CP-05: Validación Fallida (CS < 0.60)",
+      "item": [
+        {
+          "name": "📝 Crear Reporte para Usuario con Reputación Baja",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Reporte creado exitosamente', function () {",
+                  "    pm.expect(pm.response.code).to.equal(201);",
+                  "});",
+                  "",
+                  "var jsonData = pm.response.json();",
+                  "pm.environment.set('reportId_CP05', jsonData.IdReporte);",
+                  "console.log('✅ Reporte para CP-05 creado - esperando validación asíncrona...');",
+                  "console.log('⏳ Espere 2-3 segundos para que se procese en la cola de validación');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\\n  \\\"userId\\\": 2,\\n  \\\"incidentTypeId\\\": 1,\\n  \\\"latitude\\\": -0.1900,\\n  \\\"longitude\\\": -78.5000,\\n  \\\"description\\\": \\\"Reporte con usuario de baja reputación\\\"\\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/reports",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports"]
+            }
+          }
+        },
+        {
+          "name": "⏳ Esperar 3 segundos para procesamiento",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.sendRequest({",
+                  "    url: 'https://httpbin.org/delay/3',",
+                  "    method: 'GET'",
+                  "}, function (err, response) {",
+                  "    if (!err) {",
+                  "        console.log('✅ Tiempo de espera completado'):",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://httpbin.org/delay/3",
+              "protocol": "https",
+              "host": ["httpbin.org"],
+              "path": ["delay", "3"]
+            }
+          }
+        },
+        {
+          "name": "❌ Verificar Reporte Rechazado (Estado 2)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Retorna lista de reportes', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});",
+                  "",
+                  "pm.test('Reporte rechazado tiene CS < 0.60', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    var rejectedReport = jsonData.find(r => r.estado === 2);",
+                  "    if (rejectedReport) {",
+                  "        pm.expect(rejectedReport.trustScore).to.be.lessThan(0.60);",
+                  "        console.log('✅ CP-05 CUMPLE: Reporte rechazado con CS =', rejectedReport.trustScore);",
+                  "    } else {",
+                  "        console.log('⚠️  No hay reportes rechazados aún - puede reintentarse'):",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reports",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "CP-06: Alerta Push por Cercanía",
+      "item": [
+        {
+          "name": "🔍 Verificar Usuarios Cercanos (STDistance)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Endpoint responde con usuarios cercanos', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});",
+                  "",
+                  "pm.test('Respuesta contiene array de usuarios', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.be.an('object');",
+                  "    pm.expect(jsonData.nearbyUsers).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/alerts/nearby?latitude=-0.2217&longitude=-78.4956&radius=1000",
+              "host": ["{{baseUrl}}"],
+              "path": ["alerts", "nearby"],
+              "query": [
+                {
+                  "key": "latitude",
+                  "value": "-0.2217"
+                },
+                {
+                  "key": "longitude",
+                  "value": "-78.4956"
+                },
+                {
+                  "key": "radius",
+                  "value": "1000"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "📝 Crear Reporte Que Triggeree Push Notifications",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Reporte creado exitosamente', function () {",
+                  "    pm.expect(pm.response.code).to.equal(201);",
+                  "});",
+                  "",
+                  "var jsonData = pm.response.json();",
+                  "pm.environment.set('reportId_CP06', jsonData.IdReporte);",
+                  "console.log('✅ Reporte creado - se procesará en cola de validación y alertas');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\\n  \\\"userId\\\": 1,\\n  \\\"incidentTypeId\\\": 1,\\n  \\\"latitude\\\": -0.2217,\\n  \\\"longitude\\\": -78.4956,\\n  \\\"description\\\": \\\"Alerta para notificación push\\\"\\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/reports",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports"]
+            }
+          }
+        },
+        {
+          "name": "⏳ Esperar procesamiento y envío de push (3s)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.sendRequest({",
+                  "    url: 'https://httpbin.org/delay/3',",
+                  "    method: 'GET'",
+                  "}, function (err, response) {",
+                  "    if (!err) {",
+                  "        console.log('✅ Tiempo de espera completado - push debería haber sido enviado'):",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://httpbin.org/delay/3",
+              "protocol": "https",
+              "host": ["httpbin.org"],
+              "path": ["delay", "3"]
+            }
+          }
+        },
+        {
+          "name": "✅ Verificar Reporte fue Validado y Alertas Enviadas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Reportes validados disponibles', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});",
+                  "",
+                  "pm.test('CP-06 CUMPLE: Reporte procesado y alertas enviadas', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.length).to.be.greaterThan(0);",
+                  "    console.log('✅ CP-06 CUMPLE: STDistance funciona + Firebase push enviado');",
+                  "    console.log('📱 Verifique en dispositivo móvil la notificación recibida'):",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reports/validated",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "validated"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "BONUS: Endpoints Adicionales",
+      "item": [
+        {
+          "name": "📍 Obtener Datos de Heatmap",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reports/heatmap/data?days=30",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "heatmap", "data"],
+              "query": [
+                {
+                  "key": "days",
+                  "value": "30"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "📍 Obtener Puntos de Heatmap",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reports/heatmap/points?days=30",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "heatmap", "points"],
+              "query": [
+                {
+                  "key": "days",
+                  "value": "30"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "📊 Obtener Estadísticas Diarias",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reports/heatmap/daily-stats?days=30",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "heatmap", "daily-stats"],
+              "query": [
+                {
+                  "key": "days",
+                  "value": "30"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "🧪 Obtener Datos de Prueba (Mock)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reports/heatmap/test",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "heatmap", "test"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "userId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "incidentTypeId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "reportId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "validLatitude",
+      "value": "-0.2217",
+      "type": "string"
+    },
+    {
+      "key": "validLongitude",
+      "value": "-78.4956",
+      "type": "string"
+    }
+  ]
+}

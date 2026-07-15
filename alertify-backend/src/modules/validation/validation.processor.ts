@@ -4,21 +4,29 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Report } from '../reports/entities/report.entity';
 import { User } from '../identity/entities/user.entity';
+import { IdentityService } from '../identity/identity.service';
 import { ReportsGateway } from '../reports/gateways/reports.gateway';
 import { HeatmapDataService } from '../reports/etl/services/heatmap-data.service';
+import { Logger } from '@nestjs/common';
+import { HttpService } from '@nestjs/axios';
+import { firstValueFrom } from 'rxjs';
+
 
 @Processor('report-validation')
 export class ValidationProcessor extends WorkerHost {
+  private readonly logger = new Logger(ValidationProcessor.name);
   constructor(
     @InjectRepository(Report)
     private readonly reportRepository: Repository<Report>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    private readonly identityService: IdentityService,
     private readonly reportsGateway: ReportsGateway,
     private readonly heatmapDataService: HeatmapDataService,
     // Cola de despacho de alertas — Sprint 4 (T13/T14)
     @InjectQueue('alert-dispatch')
     private readonly alertQueue: Queue,
+    private readonly httpService: HttpService,
   ) {
     super();
   }
@@ -37,12 +45,13 @@ export class ValidationProcessor extends WorkerHost {
     
     const coords = report.UbicacionGeografica;
 
-    const user = await this.userRepository.findOne({
+    let user = await this.userRepository.findOne({
         where: { IdUsuario: report.IdUsuario },
     });
 
     if (!user) {
-        throw new Error(`User with id ${report.IdUsuario} not found`);
+        console.warn(`ValidationProcessor: Usuario ${report.IdUsuario} no encontrado, creando registro mínimo.`);
+        user = await this.identityService.ensureUser(report.IdUsuario);
     }
     
     // 2. Ejecutar Algoritmo de Confianza (CS)
@@ -71,6 +80,22 @@ export class ValidationProcessor extends WorkerHost {
 
       const heatmapPoints = await this.heatmapDataService.getHeatmapPoints(30);
       this.reportsGateway.emitHeatmapUpdate(heatmapPoints);
+
+      const webhookUrl = 'http://localhost:3001/api/webhook/incidente';
+      const webhookPayload = {
+        id: report.IdReporte,
+        latitud: coords?.latitude,
+        longitud: coords?.longitude,
+        estado: 'validado',
+        trustScore: finalCS
+      };
+
+      try {
+        await firstValueFrom(this.httpService.post(webhookUrl, webhookPayload));
+        this.logger.log(`[Webhook] Notificación de incidente enviada con éxito (Reporte: ${report.IdReporte})`);
+      } catch (error) {
+        this.logger.error(`[Webhook] Falló la notificación al módulo de ruteo: ${error.message}`);
+      }
 
       // ── Sprint 4: Publicar job de alerta push ──────────────────────────
       // AlertsProcessor consumirá este job para:

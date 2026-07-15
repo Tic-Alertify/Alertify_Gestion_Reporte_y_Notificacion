@@ -6,6 +6,7 @@ import type { Queue } from 'bullmq';
 import { Report } from './entities/report.entity';
 import { CreateReportDto } from './dto/create-report.dto';
 import { HeatmapDataService } from './etl/services/heatmap-data.service';
+import { IdentityService } from '../identity/identity.service';
 
 @Injectable()
 export class ReportsService {
@@ -17,6 +18,9 @@ export class ReportsService {
     @InjectQueue('report-validation') 
     private readonly reportQueue: Queue,
 
+    // Inyectamos el servicio de identidad para asegurar usuarios antes de reportar
+    private readonly identityService: IdentityService,
+
     // Inyectamos el servicio de heatmap
     private readonly heatmapDataService: HeatmapDataService,
   ) {}
@@ -24,6 +28,9 @@ export class ReportsService {
   
 
   async ingestReport(dto: CreateReportDto): Promise<Report> {
+    // 0. Asegurar que el usuario existe antes de persistir el reporte.
+    await this.identityService.ensureUser(dto.userId);
+
     // 1. VALIDACIÓN GEOGRÁFICA (Geofencing) - Quito
     const QUITO_BOUNDS = { north: 0.05, south: -0.35, west: -78.60, east: -78.35 };
 

@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { InjectRepository, InjectDataSource } from '@nestjs/typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 
 @Injectable()
@@ -8,6 +8,8 @@ export class IdentityService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectDataSource()
+    private readonly dataSource: DataSource,
   ) {}
 
   /**
@@ -49,6 +51,37 @@ export class IdentityService {
     if (!user) throw new NotFoundException(`Usuario ${userId} no encontrado`);
     user.FcmToken = fcmToken;
     await this.userRepository.save(user);
+  }
+
+  /**
+   * Asegura que un usuario existe en la tabla USUARIOS.
+   * Si no existe, crea un registro mínimo para poder operar.
+   * La llamada es idempotente.
+   */
+  async ensureUser(userId: number): Promise<User> {
+    let user = await this.userRepository.findOne({ where: { IdUsuario: userId } });
+    if (user) return user;
+
+    const email = `user_${userId}@auth.local`;
+    const queryRunner = this.dataSource.createQueryRunner();
+
+    await queryRunner.connect();
+
+    try {
+      await queryRunner.query(
+        `SET IDENTITY_INSERT [dbo].[USUARIOS] ON;
+         INSERT INTO [dbo].[USUARIOS] (IdUsuario, Email, Password, PuntajeReputacion, FcmToken, UbicacionActual, FechaUltimaUbicacion)
+         VALUES (@0, @1, @2, @3, @4, NULL, NULL);
+         SET IDENTITY_INSERT [dbo].[USUARIOS] OFF;`,
+        [userId, email, '', 5.0, null],
+      );
+    } finally {
+      await queryRunner.release();
+    }
+
+    user = await this.userRepository.findOne({ where: { IdUsuario: userId } });
+    if (!user) throw new Error(`No se pudo crear el usuario ${userId}`);
+    return user;
   }
 
   /**
